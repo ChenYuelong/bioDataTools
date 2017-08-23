@@ -9,7 +9,7 @@
 import os, sys
 import argparse
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0]))))
-from cutData import cutFastq,cutFastqC
+from fastqTools import cutFastq,cutFastqC
 
 def main():
     parser = argparse.ArgumentParser(description='截取数据，目前只能截取fastq')

@@ -67,14 +67,28 @@ class cutfastq():
     def run(self):
         with self._read() as rf , self._writer() as wf:
             line = 0
-            while line  < self._readcount * 4:
-                line = line + 1
-                rline = rf.read()
-                wf.write(rline)
+            wdata = []
+            for rline in rf.readlines():
+                if line < self._readcount *4 :
+                    line = line + 1
+                    wdata.append(rline)
+                    # print(self._readcount)
+                    # print(line)
+            if isinstance(wdata[0],str):
+                wf.write(''.join(wdata))
+            elif isinstance(wdata[0],bytes):
+                wf.write(b''.join(wdata))
+            # while line  < self._readcount * 4:
+            #     line = line + 1
+            #     rline = rf.read()
+            #     wf.write(rline)
 
 
 def main():
-    pass
+    test=cutfastq('/annoroad/data1/bioinfo/PROJECT/RD/Medical/Leukemia/V2_panel/test12_RERUN_20160120/chenyuelong/tmp/test.fq.gz',
+                  75,'1.5',
+                  '/annoroad/data1/bioinfo/PROJECT/RD/Medical/Leukemia/V2_panel/test12_RERUN_20160120/chenyuelong/tmp/time.fastq.gz')
+    test.run()
 
 
 if __name__ == '__main__':
