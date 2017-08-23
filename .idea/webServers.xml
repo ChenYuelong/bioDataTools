@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="cb496cb3-e20d-4835-9f99-759ed287ee53" name="BioDataTools" url="http://192.168.2.201">
+        <fileTransfer host="192.168.2.201" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" rootFolder="/annoroad/data1/bioinfo/PROJECT/RD/Medical/Leukemia/chenyl/pyProjects" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
