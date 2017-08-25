@@ -6,7 +6,7 @@ README
 - **截取生物数据（fastq，fastq.gz）**
 - **根据后缀名判断最终生成fq还是fq.gz**
 
-## 目前建议 ##
+## 目前建议 一 ##
 
 强烈建议使用解压后的fq文件进行处理，虽说目前程序可以使用fq.gz文件，但是对于速度的影响非常大
 
@@ -18,6 +18,16 @@ e.g.：
 gunzip test.fq.gz && fastqSample -f test.fq -o result.fq -s xxxxx -seed xxxxx \
     && gzip test.fq && gzip result.fq
 ```
+
+## 目前建议 二 ##
+
+针对PE抽样，test.r1.fq.gz 和 test.r2.fq.gz，推介使用述方法：
+```
+gunzip test.r1.fq.gz && fastqSample -f test.r1.fq -o result.r1.fq -s xxxxx -seed 111 \
+    && cp test.r1.fq.fqidx test.r2.fq.fqidx && gunzip test.r2.fq.gz && fastqSample -f test.r2.fq -o result.r2.fq -s xxxxx -seed 111 \
+     &&gzip test.r1.fq && gzip result.r1.fq && gzip test.r2.fq && gzip result.r2.fq
+```
+
 ## 测试结果 ##
 
 数据说明：
