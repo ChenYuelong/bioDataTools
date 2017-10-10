@@ -9,6 +9,7 @@
 import os, sys
 import gzip
 import random
+import subprocess
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0]))))
 from biodata import biodata
@@ -36,14 +37,21 @@ class fastq(biodata):
                 idx.append(line.strip('\n'))
         return idx
 
+    def _subP(self,cmd):
+        p = subprocess.Popen(cmd,shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE)
+        print('The cmd({0}) has finshed with ({1})!'.format(cmd, p.communicate()))
+        return True
+
     def _readfastq(self):
         suffix = os.path.splitext(self._fastq)[1]
         if suffix == '.fastq' or suffix == '.fq':
             fbuffer = open(self._fastq, 'r')
             return fbuffer
         elif suffix == '.gz':
-            fbuffer = gzip.GzipFile(self._fastq,'rb')
-            return fbuffer
+            cmd = 'gunzip -c {0} > {0}.tmp'.format(self._fastq)
+            if self._subP(cmd):
+                fbuffer = open('{0}.tmp'.format(self._fastq),'r')
+                return fbuffer
         else:
             raise TypeError('FASTQ file must be .fastq or .fq or .gz')
 
