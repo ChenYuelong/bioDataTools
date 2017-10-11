@@ -35,16 +35,20 @@ def main():
         parser.print_help()
         sys.exit(1)
     else:
-        sampleFq = fastq(args.fastq)
-        sampleFq.run()
-        print(int(args.n))
-        samplelist = sampleFq.sample(int(args.n),args.seed)
-
-        with getWriteBuff(args.output) as f:
-            if isinstance(f,gzip.GzipFile):
-                f.write(str.encode('\n'.join(samplelist)))
-            else:
-                f.write('\n'.join(samplelist))
+        sampleFq = fastq(args.fastq,args.output)
+        sampleFq.getIndex()
+        sampleFq.sample(int(args.n))
+        sampleFq.write()
+        sampleFq.close()
+        # sampleFq.run()
+        # print(int(args.n))
+        # samplelist = sampleFq.sample(int(args.n),args.seed)
+        #
+        # with getWriteBuff(args.output) as f:
+        #     if isinstance(f,gzip.GzipFile):
+        #         f.write(str.encode('\n'.join(samplelist)))
+        #     else:
+        #         f.write('\n'.join(samplelist))
 
 
 

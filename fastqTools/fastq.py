@@ -7,9 +7,9 @@
 # @Software: PyCharm
 
 import os, sys
-import gzip
 import random
 import subprocess
+import tempfile
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0]))))
 from biodata import biodata
@@ -20,11 +20,24 @@ class fastq(biodata):
     fastq数据类
     '''
 
-    def __init__(self, fastq):
+    def __init__(self, fastq,out):
         biodata.__init__(self)
         self._fastq = fastq
         self._idx = []
         self._idxf = '{}.fqidx'.format(self._fastq)
+        self._out = out
+        self._tmpfile = []
+        self.sampleReads=[]
+
+    def __del__(self):
+        if len(self._tmpfile) > 0:
+            rmfiles = ' '.join(self._tmpfile)
+            cmd = 'rm -rf {}'.format(rmfiles)
+            p = self._subP(cmd)
+            p.communicate()
+
+    def close(self):
+        self.__del__()
 
     def _readindex(self):
         '''
@@ -38,9 +51,8 @@ class fastq(biodata):
         return idx
 
     def _subP(self,cmd):
-        p = subprocess.Popen(cmd,shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE)
-        print('The cmd({0}) has finshed with ({1})!'.format(cmd, p.communicate()))
-        return True
+        p = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        return p
 
     def _readfastq(self):
         suffix = os.path.splitext(self._fastq)[1]
@@ -48,31 +60,50 @@ class fastq(biodata):
             fbuffer = open(self._fastq, 'r')
             return fbuffer
         elif suffix == '.gz':
-            cmd = 'gunzip -c {0} > {0}.tmp'.format(self._fastq)
-            if self._subP(cmd):
-                fbuffer = open('{0}.tmp'.format(self._fastq),'r')
-                return fbuffer
+            tpfile = '{0}/{1}.tmp'.format(tempfile.gettempdir(),os.path.basename(self._fastq))
+            self._tmpfile.append(tpfile)
+            cmd = 'gunzip -c {0} > {1}'.format(self._fastq,tpfile)
+            # print(cmd)
+            p = self._subP(cmd)
+            # print(p.pid)
+            p.communicate()
+            fbuffer = open(tpfile,'r')
+            return fbuffer
         else:
             raise TypeError('FASTQ file must be .fastq or .fq or .gz')
+
+    def _writefastq(self):
+        suffix = os.path.splitext(self._out)[1]
+        tmpf = '{0}/{1}.tmp'.format(tempfile.gettempdir(),os.path.basename(self._out))
+        self._tmpfile.append(tmpf)
+        with open(tmpf,'w') as f:
+            for line in self.sampleReads:
+                f.write('{}\n'.format(line))
+        if suffix == '.fastq' or suffix == '.fq':
+            cmd = 'cp {0} {1}'.format(tmpf,self._out)
+        elif suffix == '.gz':
+            cmd = 'gzip -c {0} > {1}'.format(tmpf,self._out)
+        else:
+            raise TypeError('File output must be .fq/.fastq/.fq.gz')
+
+        # print(cmd)
+        self._subP(cmd).communicate()
+
+    def write(self):
+        self._writefastq()
 
     def getIndex(self):
         if os.path.exists(self._idxf):
             self._idx = self._readindex()
-            # self._idx.reverse()
             return True
         else:
             with self._readfastq() as fbuff, open(self._idxf, 'w') as f:
                 start = str(fbuff.tell())
-
                 linenumber = 0
                 while 1:
                     linenumber += 1
                     line = fbuff.readline()
                     if not line:
-                        # if linenumber > 1:
-                        # self._idx.append(start)
-                        # self._idx.reverse()
-                        # f.write('{}\n'.format(start))
                         break
                     if linenumber == 400:
                         self._idx.append(start)
@@ -81,8 +112,9 @@ class fastq(biodata):
                         linenumber = 0
         return True
 
-    def sample(self, n, seed=''):
-        return self._sample(n, seed)
+    def sample(self, n=100000, seed=''):
+        self._sample(n,seed)
+        # return self._sample(n, seed)
 
     def _sample(self, n=100000, seed=''):
         '''
@@ -105,7 +137,8 @@ class fastq(biodata):
             else:
                 raise ValueError('Sample size was large than source!')
         print('sample size:{}'.format(len(samplelist) / 4))
-        return samplelist
+        self.sampleReads = samplelist
+        # return samplelist
 
     def _getRead(self, fqbuffer, idxes, aver=1, more=0):
         sl = []
@@ -117,32 +150,25 @@ class fastq(biodata):
                 lines = aver * 4
             fqbuffer.seek(int(i))
             for j in range(lines):
-                if isinstance(fqbuffer,gzip.GzipFile):
-                    sl.append(bytes.decode(fqbuffer.readline()).strip('\n'))
-                else:
-                    sl.append(fqbuffer.readline().strip('\n'))
+                sl.append(fqbuffer.readline().strip('\n'))
         return sl
 
-    def run(self):
+    def test(self):
         self.getIndex()
-        # print(self.sample(5))
-        # random.seed(1)
-        # choose = random.sample(self._idx, 50000)
-        # print(choose)
-        # with self._readfastq() as mytest:
-        #     for i in choose:
-        #         mytest.seek(int(i[0]))
-        #         for j in range(4):
-        #             pass
-        # print(mytest.readline().strip('\n'))
-        # print(i)
+        self.sample(5)
+        self.write()
+        self.close()
+
+
 
 
 def main():
     test = fastq(
-        '/annoroad/data1/bioinfo/PROJECT/RD/Medical/Leukemia/V2_panel/test12_RERUN_20160120/chenyuelong/tmp/test20000.fq.gz')
+        '/annoroad/data1/bioinfo/PROJECT/RD/Medical/Leukemia/V2_panel/test12_RERUN_20160120/chenyuelong/tmp/uniq.fq.gz',
+        '/annoroad/data1/bioinfo/PROJECT/RD/Medical/Leukemia/V2_panel/test12_RERUN_20160120/chenyuelong/tmp/go.gz')
     # test.getIndex()
     test.test()
+    # del(test)
 
 
 if __name__ == '__main__':
