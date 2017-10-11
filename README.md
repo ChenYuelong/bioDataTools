@@ -54,6 +54,10 @@ gunzip test.r1.fq.gz && fastqSample -f test.r1.fq -o result.r1.fq -s xxxxx -seed
 
 ----------------------
 
+### 20171012 ###
+
+1. 通过subprocess改进了针对gz文件的处理，速度似乎能快不少
+
 ### 20170823 ###
 
 1. 3.6G的fastq原始文件（测序长度为75），基于fastq建立索引13分中左右，包括从中随机取11条
